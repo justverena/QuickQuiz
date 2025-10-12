@@ -1,0 +1,17 @@
+venv/
+.env
+*.env
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+/staticfiles/
+media/
+.vscode/
+.idea/
+*.swp
+*.log
+.DS_Store
+Thumbs.db

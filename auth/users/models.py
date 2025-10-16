@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.validators import MinLengthValidator, EmailValidator
@@ -16,13 +17,13 @@ class Role(models.Model):
 class UserManager(BaseUserManager):
     def create_user(self, username, email, password, role):
         if not email:
-            raise ValueError("email required")
+            raise ValueError("Email required. Please enter Email.")
         if not username:
-            raise ValueError("")
+            raise ValueError("Username required. Please enter Username.")
         if not password or len(password) < 8:
-            raise ValueError("")
+            raise ValueError("Password required. Please enter password.")
         if not role:
-            raise ValueError("")
+            raise ValueError("Role required. Please enter role.")
         
         email = self.normalize_email(email)
         user = self.model(username=username, email=email, role=role)
@@ -36,8 +37,9 @@ class UserManager(BaseUserManager):
         return self.create_user(username, email, password, role)
 
 class User(AbstractBaseUser):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=50, unique=True)
-    email = models.EmailField(unique=True, validators=[EmailValidator()])
+    email = models.EmailField(unique=True)
     role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="users")
     password = models.CharField(max_length=128, validators=[MinLengthValidator(8)])
     

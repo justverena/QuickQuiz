@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, viewsets
 from django.contrib.auth import get_user_model
 from ..serializers import UserSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -7,8 +7,19 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from users.models import User
+from users.serializers import UserSerializer
 
 User = get_user_model()
+
+#user crud
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return super().update(request, *args, **kwargs)
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod

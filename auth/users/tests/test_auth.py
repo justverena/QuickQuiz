@@ -28,8 +28,7 @@ class AuthTests(TestCase):
 
         self.login_url = reverse("login")
         self.me_url = reverse("me")
-        self.student_me_url = reverse("student_me")
-        self.teacher_me_url = reverse("teacher_me")
+
 
     def test_login_returns_jwt_token(self):
         response = self.client.post(
@@ -57,33 +56,31 @@ class AuthTests(TestCase):
         response = self.client.get(self.me_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["username"], "student1")
+        
+    def test_login_invalid_credentials(self):
+        response = self.client.post(
+            self.login_url,
+            {"username": "wronguser", "password": "wrongpass"},
+            format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("detail", response.json())
+        self.assertIn("No active account found", response.json()["detail"])
+        
+    def test_access_protected_endpoint_without_token(self):
+        response = self.client.get(self.me_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("Authentication credentials were not provided", response.json()["detail"])
 
-    def test_role_restriction_student_me(self):
+    def test_student_cannot_access_teacher_endpoint(self):
         login_response = self.client.post(
             self.login_url,
             {"username": "student1", "password": "studentpass123"},
             format="json"
         )
-        access = login_response.data["access"]
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+        token = login_response.data["access"]
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
 
-        student_response = self.client.get(self.student_me_url)
-        self.assertEqual(student_response.status_code, status.HTTP_200_OK)
-
-        teacher_response = self.client.get(self.teacher_me_url)
-        self.assertEqual(teacher_response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_role_restriction_teacher_me(self):
-        login_response = self.client.post(
-            self.login_url,
-            {"username": "teacher1", "password": "teacherpass123"},
-            format="json"
-        )
-        access = login_response.data["access"]
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
-
-        teacher_response = self.client.get(self.teacher_me_url)
-        self.assertEqual(teacher_response.status_code, status.HTTP_200_OK)
-
-        student_response = self.client.get(self.student_me_url)
-        self.assertEqual(student_response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.get("/auth/teacher/add-test/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("You do not have permission", response.json()["detail"])

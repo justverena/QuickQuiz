@@ -49,8 +49,43 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
     'quizzes'
 ]
+
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'quizzes.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    )
+}
+JWT_SECRET_KEY="AppleNightDragonRiverEagleIronLion"
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Quiz Service API",
+    "DESCRIPTION": "API микросервиса для управления квизами",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+
+    'SECURITY': [{'BearerAuth': []}],
+    'COMPONENTS': {
+        'securitySchemes': {
+            'BearerAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+                'description': 'Paste token obtained from Auth Service. Example: `Bearer eyJhbGciOiJIUzI1Ni...`'
+            }
+        }
+    },
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

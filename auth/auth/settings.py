@@ -7,8 +7,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("SECRET_KEY", "fallback_secret")
-DEBUG = os.getenv("DEBUG", "True") == "True"
+SECRET_KEY = "some_secret"
 
 ALLOWED_HOSTS = ["*"]
 
@@ -71,13 +70,14 @@ WSGI_APPLICATION = "auth.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DATABASE_NAME", "auth"),
-        "USER": os.getenv("DATABASE_USER", "postgres"),
-        "PASSWORD": os.getenv("DATABASE_PASSWORD", "postgres"),
-        "HOST": os.getenv("DATABASE_HOST", "localhost"),
-        "PORT": os.getenv("DATABASE_PORT", "5432"),
+        "NAME": "auth",
+        "USER": "postgres",
+        "PASSWORD": "postgres",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
+
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -96,7 +96,7 @@ REST_FRAMEWORK = {
 
 from datetime import timedelta
 
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", SECRET_KEY)
+JWT_SECRET_KEY = "AppleNightDragonRiverEagleIronLion"
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),

@@ -22,7 +22,9 @@ INSTALLED_APPS = [
     "rest_framework",
     'rest_framework_simplejwt',
     
-    'drf_yasg',
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
+
 
     "users",
 ]
@@ -86,9 +88,8 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
-
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
@@ -97,6 +98,27 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 
 JWT_SECRET_KEY = "AppleNightDragonRiverEagleIronLion"
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Auth Service API",
+    "DESCRIPTION": "API микросервиса аутентификации",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+
+    'SECURITY': [{'BearerAuth': []}],
+    'COMPONENTS': {
+        'securitySchemes': {
+            'BearerAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+                'description': 'Paste token obtained from Auth Service. Example: `Bearer eyJhbGciOiJIUzI1Ni...`'
+            }
+        }
+    },
+}
+
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
@@ -116,6 +138,6 @@ SWAGGER_SETTINGS = {
     },
 }
 
-STATIC_URL = '/static/'
+STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

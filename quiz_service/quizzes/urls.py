@@ -1,5 +1,5 @@
 from rest_framework.routers import DefaultRouter
-from .views import QuizViewSet, QuestionViewSet, OptionViewSet, SessionViewSet
+from .views import QuizViewSet, QuestionViewSet, OptionViewSet, SessionViewSet, StudentSessionViewSet
 from .answer_views import AnswerViewSet
 from django.urls import path, include
 
@@ -10,7 +10,7 @@ teacher_router.register(r'options', OptionViewSet, basename='option')
 teacher_router.register(r'sessions', SessionViewSet, basename='session')
 
 student_router = DefaultRouter()
-student_router.register(r'sessions', SessionViewSet, basename='session')
+student_router.register(r'sessions', StudentSessionViewSet, basename='session')
 student_router.register(r'answers', AnswerViewSet, basename='answers')
 
 

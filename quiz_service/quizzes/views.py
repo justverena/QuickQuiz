@@ -48,8 +48,12 @@ class SessionViewSet(viewsets.ModelViewSet):
             permission_classes = [IsTeacher]
         else:
             permission_classes = [IsAuthenticated]
-        return [p() for p in permission_classes]
 
+        return [p() for p in permission_classes]
+    
+class StudentSessionViewSet(viewsets.ModelViewSet):
+    queryset = Session.objects.all()
+    serializer_class = SessionSerializer
     @extend_schema(exclude=True)
     def create(self, request, *args, **kwargs):
         if getattr(request.user, 'role', None) != 'teacher':
@@ -79,7 +83,7 @@ class SessionViewSet(viewsets.ModelViewSet):
         if getattr(user, 'role', None) == 'teacher':
             return Session.objects.filter(quiz__teacher_id=user.id)
         elif getattr(user, 'role', None) == 'student':
-            return Session.objects.none()  # обычный list не показывает сессии
+            return Session.objects.none()
         return Session.objects.none()
 
     @action(detail=False, methods=['get'], url_path='get-by-invite', url_name='get-by-invite')

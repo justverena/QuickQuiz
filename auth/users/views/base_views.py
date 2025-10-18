@@ -8,19 +8,61 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from users.models import User
 from users.serializers import UserSerializer
+from users.permissions import IsOwner
+from rest_framework.exceptions import PermissionDenied
+from django.http import Http404
 
 User = get_user_model()
 
 class ValidateTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=False) 
-
-class UserViewSet(viewsets.ModelViewSet):
+    
+class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [permissions.AllowAny]
 
-    def partial_update(self, request, *args, **kwargs):
-        kwargs['partial'] = True
+class UserViewSet(viewsets.GenericViewSet, 
+                  generics.RetrieveAPIView, 
+                  generics.UpdateAPIView, 
+                  generics.DestroyAPIView):
+    http_method_names = ['get', 'patch', 'delete']
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsOwner]
+    
+    def get_queryset(self):
+        user = self.request.user
+        try:
+            is_admin = user.role.name == "admin"
+        except Exception:
+            is_admin = False
+
+        if is_admin:
+            return User.objects.all()
+        return User.objects.filter(id=user.id)
+    
+    def get_object(self):
+        try:
+            return super().get_object()
+        except Http404:
+            raise PermissionDenied("You do not have permission to access this user.")
+    
+    def retrieve(self, request, *args, **kwargs):
+        obj = self.get_object()
+        self.check_object_permissions(request, obj)
+        serializer = self.get_serializer(obj)
+        return Response(serializer.data)
+    
+    def update(self, request, *args, **kwargs):
+        obj = self.get_object()
+        self.check_object_permissions(request, obj)
         return super().update(request, *args, **kwargs)
+    
+    def destroy(self, request, *args, **kwargs):
+        obj = self.get_object()
+        self.check_object_permissions(request, obj)
+        return super().destroy(request, *args, **kwargs)
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -32,8 +74,11 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
-        data['user'] = UserSerializer(self.user).data
-        return data
+        ordered_data = {
+            "access": data["access"],
+            "refresh": data["refresh"]
+        }
+        return ordered_data
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
@@ -48,39 +93,39 @@ class MeView(generics.RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
-class InternalValidateTokenView(APIView):
-    serializer_class = ValidateTokenSerializer
-    authentication_classes = [JWTAuthentication]
-    permission_classes = []
+# class InternalValidateTokenView(APIView):
+#     serializer_class = ValidateTokenSerializer
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = []
 
-    def post(self, request):
-        auth_header = request.headers.get("Authorization")
-        token_str = None
+#     def post(self, request):
+#         auth_header = request.headers.get("Authorization")
+#         token_str = None
 
-        if auth_header and auth_header.startswith("Bearer "):
-            token_str = auth_header.split(" ")[1]
-        elif "token" in request.data:
-            token_str = request.data.get("token")
-        else:
-            return Response(
-                {"detail": "Authorization header or token missing"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+#         if auth_header and auth_header.startswith("Bearer "):
+#             token_str = auth_header.split(" ")[1]
+#         elif "token" in request.data:
+#             token_str = request.data.get("token")
+#         else:
+#             return Response(
+#                 {"detail": "Authorization header or token missing"},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
 
-        jwt_auth = JWTAuthentication()
-        try:
-            validated_token = jwt_auth.get_validated_token(token_str)
-            user = jwt_auth.get_user(validated_token)
+#         jwt_auth = JWTAuthentication()
+#         try:
+#             validated_token = jwt_auth.get_validated_token(token_str)
+#             user = jwt_auth.get_user(validated_token)
 
-            return Response({
-                "user_id": str(user.id),
-                "username": user.username,
-                "role": user.role.name if hasattr(user, 'role') else None,
-                "is_valid": True
-            }, status=status.HTTP_200_OK)
+#             return Response({
+#                 "user_id": str(user.id),
+#                 "username": user.username,
+#                 "role": user.role.name if hasattr(user, 'role') else None,
+#                 "is_valid": True
+#             }, status=status.HTTP_200_OK)
 
-        except (InvalidToken, TokenError):
-            return Response(
-                {"is_valid": False, "detail": "Invalid or expired token"},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
+#         except (InvalidToken, TokenError):
+#             return Response(
+#                 {"is_valid": False, "detail": "Invalid or expired token"},
+#                 status=status.HTTP_401_UNAUTHORIZED
+#             )

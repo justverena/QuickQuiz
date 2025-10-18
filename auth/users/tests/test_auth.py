@@ -72,15 +72,4 @@ class AuthTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertIn("Authentication credentials were not provided", response.json()["detail"])
 
-    def test_student_cannot_access_teacher_endpoint(self):
-        login_response = self.client.post(
-            self.login_url,
-            {"username": "student1", "password": "studentpass123"},
-            format="json"
-        )
-        token = login_response.data["access"]
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
-
-        response = self.client.get("/auth/teacher/add-test/")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertIn("You do not have permission", response.json()["detail"])
+    

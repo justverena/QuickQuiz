@@ -28,19 +28,20 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "username", "email", "password", "role", "role_name"]
         extra_kwargs = {
             'password': {'write_only': True},
-            # "username": {"validators": []},
-            # "email": {"validators": []},
         }
+    
+    def _request_user_is_admin(self):
+        request = self.context.get("request", None)
         
-    # def validate_username(self, value):
-    #     if User.objects.filter(username=value).exists():
-    #         raise serializers.ValidationError("Username already exists.")
-    #     return value
-
-    # def validate_email(self, value):
-    #     if User.objects.filter(email=value).exists():
-    #         raise serializers.ValidationError("Email already exists.")
-    #     return value
+        if not request:
+            return False
+        user = getattr(request, "user", None)
+        if not user or not getattr(user, "is_authenticated", False):
+            return False
+        try:
+            return getattr(user.role, "name", None) == "admin"
+        except Exception:
+            return False
         
     def validate_role(self, value):
         allowed_roles = ['admin', 'teacher', 'student',]
@@ -51,10 +52,21 @@ class UserSerializer(serializers.ModelSerializer):
             
         if not Role.objects.filter(name=value).exists():
             raise serializers.ValidationError(f"Role '{value}' does not exist in DB")
+        
+        if value == "admin":
+            if not self._request_user_is_admin():
+                raise serializers.ValidationError("assigning 'admin' role via API is forbidden")
+        
         return value
+
+        
     
     def create(self, validated_data):
         role_name = validated_data.pop('role')
+        
+        if role_name == "admin" and not self._request_user_is_admin():
+            raise serializers.ValidationError({"role": "creating user with 'admin' role is forbidden"})
+        
         role_obj = Role.objects.get(name=role_name)
         password = validated_data.pop('password')
         user = User.objects.create(
@@ -67,6 +79,12 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         role_name = validated_data.pop('role', None)
         if role_name:
+            if role_name == "admin" and not self._request_user_is_admin():
+                raise serializers.ValidationError({"role": "assigning 'admin' role is forbidden"})
+            
+            if not self._request_user_is_admin():
+                raise serializers.ValidationError({"role": "only admin can change role"})
+            
             try:
                 role = Role.objects.get(name=role_name)
                 instance.role = role
@@ -78,7 +96,10 @@ class UserSerializer(serializers.ModelSerializer):
             instance.password = make_password(password)
             
         for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+            if attr == 'role':
+                instance.role = Role.objects.get(name=value)
+            else:
+                setattr(instance, attr, value)
             
         instance.save()
         return super().update(instance, validated_data)

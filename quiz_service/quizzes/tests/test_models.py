@@ -1,6 +1,10 @@
 from django.test import TestCase
 from quizzes.models import Quiz, Question, Option, Session, Answer
 import uuid
+from django.test import TestCase
+from django.utils import timezone
+from django.contrib.auth import get_user_model
+from quizzes.models import Quiz, Session, Question, Option, Answer
 class QuizModelTest(TestCase):
     def setUp(self):
         self.teacher_id = uuid.uuid4()
@@ -64,3 +68,43 @@ class SessionModelTest(TestCase):
         )
         self.assertEqual(session.quiz, self.quiz)
         self.assertTrue(session.is_active)
+
+
+class ModelsSmokeTests(TestCase):
+    def test_create_quiz_session_question_option(self):
+        quiz = Quiz.objects.create(
+            title="Sample Quiz",
+            teacher_id=uuid.uuid4()
+        )
+        session = Session.objects.create(
+            quiz=quiz, invite_code="ABC123", is_active=True
+        )
+        q1 = Question.objects.create(quiz=quiz, text="2+2=?")
+        Option.objects.create(question=q1, text="3", is_correct=False)
+        o2 = Option.objects.create(question=q1, text="4", is_correct=True)
+
+        self.assertTrue(quiz.id)
+        self.assertEqual(session.invite_code, "ABC123")
+        self.assertEqual(q1.quiz, quiz)
+        self.assertTrue(o2.is_correct)
+
+    def test_answer_model_basic(self):
+        quiz = Quiz.objects.create(
+            title="Math",
+            teacher_id=uuid.uuid4()
+        )
+        session = Session.objects.create(
+            quiz=quiz, invite_code="MATH1", is_active=True
+        )
+        q = Question.objects.create(quiz=quiz, text="1+1=?")
+        o = Option.objects.create(question=q, text="2", is_correct=True)
+
+        ans = Answer.objects.create(
+            session=session,
+            student_id=str(uuid.uuid4()),
+            question=q,
+            selected_options=[str(o.id)],
+            is_correct=True,
+        )
+        self.assertTrue(ans.id)
+        self.assertTrue(ans.is_correct)

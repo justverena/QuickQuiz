@@ -2,6 +2,9 @@ from django.test import TestCase
 from quizzes.models import Quiz
 from quizzes.serializers import QuizSerializer, QuestionSerializer
 import uuid
+from django.test import TestCase
+from quizzes.models import Quiz, Session, Question, Option
+from quizzes.serializers import SessionSerializer, QuestionSerializer
 
 class QuizSerializerTest(TestCase):
     def setUp(self):
@@ -42,3 +45,28 @@ class QuestionSerializerTest(TestCase):
         serializer = QuestionSerializer(data=self.question_data)
         self.assertTrue(serializer.is_valid(), serializer.errors)
         serializer.save()
+
+
+class SerializersTests(TestCase):
+    def test_session_serializer_fields(self):
+        quiz = Quiz.objects.create(title="History", teacher_id=uuid.uuid4())
+        session = Session.objects.create(
+            quiz=quiz,
+            invite_code="HIS123",
+            is_active=True,
+        )
+        data = SessionSerializer(session).data
+        self.assertIn("id", data)
+        self.assertEqual(data.get("invite_code"), "HIS123")
+        self.assertTrue(data.get("is_active"))
+
+    def test_question_serializer_includes_options(self):
+        quiz = Quiz.objects.create(title="Math", teacher_id=uuid.uuid4())
+        q = Question.objects.create(quiz=quiz, text="3+5=?")
+        Option.objects.create(question=q, text="8", is_correct=True)
+        Option.objects.create(question=q, text="7", is_correct=False)
+
+        data = QuestionSerializer(q).data
+        self.assertEqual(data["text"], "3+5=?")
+        self.assertIn("options", data)
+        self.assertTrue(any(opt["text"] == "8" for opt in data["options"]))

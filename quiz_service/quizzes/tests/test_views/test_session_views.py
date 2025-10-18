@@ -42,12 +42,6 @@ class SessionViewSetTest(APITestCase):
         response = self.client.post(self.url, self.session_data, format="json", **self.auth_headers("student"))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_student_get_session_list(self):
-        Session.objects.create(quiz=self.quiz, invite_code="CODE123", duration=15)
-        response = self.client.get(self.url, **self.auth_headers("student"))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-
     def test_teacher_can_update_session(self):
         session = Session.objects.create(quiz=self.quiz, invite_code="OLD123", duration=10)
         url = reverse("session-detail", args=[session.id])
@@ -83,3 +77,21 @@ class SessionViewSetTest(APITestCase):
         url = reverse("session-detail", args=[session.id])
         response = self.client.delete(url, **self.auth_headers("student"))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        
+    def test_student_get_session_by_invite_code(self):
+        session = Session.objects.create(
+            quiz=self.quiz,
+            invite_code="INV123",
+            duration=20
+    )
+        url = reverse("session-get-by-invite")
+        response = self.client.get(url, {"invite_code": "INV123"}, **self.auth_headers("student"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["invite_code"], "INV123")
+        self.assertEqual(response.data["duration"], 20)
+        self.assertEqual(str(response.data["quiz"]), str(self.quiz.id))
+
+    def test_student_get_session_with_wrong_invite_code(self):
+        url = reverse("session-get-by-invite")
+        response = self.client.get(url, {"invite_code": "WRONGCODE"}, **self.auth_headers("student"))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

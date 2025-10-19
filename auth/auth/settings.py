@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from datetime import timedelta
 
 load_dotenv()
+DEBUG = True
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -46,6 +47,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # "users.middleware.LogMiddleware",
 ]
 
 ROOT_URLCONF = "auth.urls"
@@ -137,6 +139,8 @@ SWAGGER_SETTINGS = {
         }
     },
 }
+
+LOG_SERVICE_URL = "http://127.0.0.1:8000/logs"
 
 STATIC_URL = 'static/'
 

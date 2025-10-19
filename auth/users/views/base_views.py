@@ -11,6 +11,7 @@ from users.serializers import UserSerializer
 from users.permissions import IsOwner
 from rest_framework.exceptions import PermissionDenied
 from django.http import Http404
+from users.utils.logger import log_endpoint
 
 User = get_user_model()
 
@@ -21,6 +22,10 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
+    
+    @log_endpoint
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
 class UserViewSet(viewsets.GenericViewSet, 
                   generics.RetrieveAPIView, 
@@ -47,18 +52,20 @@ class UserViewSet(viewsets.GenericViewSet,
             return super().get_object()
         except Http404:
             raise PermissionDenied("You do not have permission to access this user.")
-    
+    @log_endpoint
     def retrieve(self, request, *args, **kwargs):
         obj = self.get_object()
         self.check_object_permissions(request, obj)
         serializer = self.get_serializer(obj)
         return Response(serializer.data)
     
+    @log_endpoint
     def update(self, request, *args, **kwargs):
         obj = self.get_object()
         self.check_object_permissions(request, obj)
         return super().update(request, *args, **kwargs)
     
+    @log_endpoint
     def destroy(self, request, *args, **kwargs):
         obj = self.get_object()
         self.check_object_permissions(request, obj)
@@ -82,6 +89,10 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+    
+    @log_endpoint
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
 class MyTokenRefreshView(TokenRefreshView):
     pass

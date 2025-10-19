@@ -78,19 +78,20 @@ class UserSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         role_name = validated_data.pop('role', None)
-        if role_name:
-            if role_name == "admin" and not self._request_user_is_admin():
-                raise serializers.ValidationError({"role": "assigning 'admin' role is forbidden"})
-            
-            if not self._request_user_is_admin():
-                raise serializers.ValidationError({"role": "only admin can change role"})
-            
-            try:
-                role = Role.objects.get(name=role_name)
-                instance.role = role
-            except Role.DoesNotExist:
-                raise serializers.ValidationError({"role": f"Role '{role_name}' not found"})
-            
+        if instance.role.name != role_name:
+            if role_name:
+                if role_name == "admin" and not self._request_user_is_admin():
+                    raise serializers.ValidationError({"role": "assigning 'admin' role is forbidden"})
+                
+                if not self._request_user_is_admin():
+                    raise serializers.ValidationError({"role": "only admin can change role"})
+                
+                try:
+                    role = Role.objects.get(name=role_name)
+                    instance.role = role
+                except Role.DoesNotExist:
+                    raise serializers.ValidationError({"role": f"Role '{role_name}' not found"})
+                
         password = validated_data.pop('password', None)
         if password:
             instance.password = make_password(password)

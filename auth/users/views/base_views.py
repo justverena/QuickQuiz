@@ -36,6 +36,10 @@ class UserViewSet(viewsets.GenericViewSet,
     serializer_class = UserSerializer
     permission_classes = [IsOwner]
     
+    def get_operation_id_base(self, *args, **kwargs):
+        return f"{self.action}_user"
+
+    
     def get_queryset(self):
         user = self.request.user
         try:
@@ -100,9 +104,13 @@ class MyTokenRefreshView(TokenRefreshView):
 class MeView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserSerializer
-
+    
     def get_object(self):
         return self.request.user
+    
+    @log_endpoint
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 # class InternalValidateTokenView(APIView):
 #     serializer_class = ValidateTokenSerializer

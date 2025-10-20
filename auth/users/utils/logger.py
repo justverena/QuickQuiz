@@ -12,17 +12,14 @@ def log_endpoint(func):
     def wrapper(view, request, *args, **kwargs):
         start_time = time.time()
         log_data = {
-            "timestamp": datetime.utcnow().isoformat(),
-            # "service": SERVICE_NAME,
+            "timestamp": datetime.utcnow(),
             "endpoint": request.path,
-            # "method": request.method,
-            # "level": "info",
             "status": "pending",
             "payload": {},
             "response": {},
             "user_id": None,
             "session_id": None,
-        }
+}
 
         try:
             if hasattr(request.data, "items"):

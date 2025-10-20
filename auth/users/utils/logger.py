@@ -13,12 +13,11 @@ def log_endpoint(func):
         start_time = time.time()
         log_data = {
             "timestamp": datetime.utcnow().isoformat(),
-            "service": SERVICE_NAME,
+            # "service": SERVICE_NAME,
             "endpoint": request.path,
-            "method": request.method,
-            "level": "info",
+            # "method": request.method,
+            # "level": "info",
             "status": "pending",
-            "duration_ms": None,
             "payload": {},
             "response": {},
             "user_id": None,

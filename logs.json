@@ -1,0 +1,140 @@
+[
+    {
+        "service": "auth",
+        "level": "info",
+        "endpoint": "/auth/login/",
+        "method": "POST",
+        "message": "127.0.0.1 - \"POST /auth/login/\" 200",
+        "timestamp": "2025-11-06T05:19:08.007555"
+    },
+    {
+        "service": "auth",
+        "level": "info",
+        "endpoint": "/auth/me/",
+        "method": "GET",
+        "message": "127.0.0.1 - \"GET /auth/me/\" 200",
+        "timestamp": "2025-11-06T05:24:47.607503"
+    },
+    {
+        "service": "auth",
+        "level": "info",
+        "endpoint": "/auth/me/",
+        "method": "GET",
+        "message": "127.0.0.1 - \"GET /auth/me/\" 200",
+        "timestamp": "2025-11-06T05:25:02.528274"
+    },
+    {
+        "service": "auth",
+        "level": "info",
+        "endpoint": "/auth/me/",
+        "method": "GET",
+        "message": "127.0.0.1 - \"GET /auth/me/\" 200",
+        "response": {
+            "id": "67383bf5-e566-4231-9947-1224e94225a1",
+            "username": "admin",
+            "email": "admin@example.com",
+            "role_name": "admin"
+        },
+        "user_id": "67383bf5-e566-4231-9947-1224e94225a1",
+        "session_id": null,
+        "timestamp": "2025-11-06T05:33:27.390487"
+    },
+    {
+        "service": "auth",
+        "level": "info",
+        "endpoint": "/auth/login/",
+        "method": "POST",
+        "message": "127.0.0.1 - \"POST /auth/login/\" 200",
+        "response": {
+            "access": "***",
+            "refresh": "***"
+        },
+        "user_id": null,
+        "session_id": null,
+        "timestamp": "2025-11-06T05:34:08.859629"
+    },
+    {
+        "service": "auth",
+        "level": "error",
+        "endpoint": "/auth/login/",
+        "method": "POST",
+        "message": "Exception in POST /auth/login/: No active account found with the given credentials",
+        "response": null,
+        "user_id": null,
+        "session_id": null,
+        "timestamp": "2025-11-06T05:34:19.805125"
+    },
+    {
+        "service": "auth",
+        "level": "error",
+        "endpoint": "/auth/login/",
+        "method": "POST",
+        "message": "Exception in POST /auth/login/: {'username': [ErrorDetail(string='This field is required.', code='required')], 'password': [ErrorDetail(string='This field is required.', code='required')]}",
+        "response": null,
+        "user_id": null,
+        "session_id": null,
+        "timestamp": "2025-11-06T05:34:29.452855"
+    },
+    {
+        "service": "auth",
+        "level": "info",
+        "endpoint": "/auth/register/",
+        "method": "POST",
+        "message": "127.0.0.1 - \"POST /auth/register/\" 201",
+        "response": {
+            "id": "5bfa82b1-6b9a-45c2-b198-12524a75dd95",
+            "username": "andrewmin",
+            "email": "am@example.com",
+            "role_name": "student"
+        },
+        "user_id": "67383bf5-e566-4231-9947-1224e94225a1",
+        "session_id": null,
+        "timestamp": "2025-11-06T05:35:50.626864"
+    },
+    {
+        "service": "auth",
+        "level": "info",
+        "endpoint": "/auth/login/",
+        "method": "POST",
+        "message": "POST /auth/login/",
+        "response": {
+            "access": "***",
+            "refresh": "***"
+        },
+        "user_id": null,
+        "session_id": null,
+        "timestamp": "2025-11-06T06:09:45.698001"
+    },
+    {
+        "service": "auth",
+        "level": "info",
+        "endpoint": "/auth/me/",
+        "method": "GET",
+        "message": "GET /auth/me/",
+        "response": {
+            "id": "67383bf5-e566-4231-9947-1224e94225a1",
+            "username": "admin",
+            "email": "admin@example.com",
+            "role_name": "admin"
+        },
+        "user_id": "67383bf5-e566-4231-9947-1224e94225a1",
+        "session_id": null,
+        "timestamp": "2025-11-06T06:10:46.415795"
+    },
+    {
+        "service": "auth",
+        "level": "info",
+        "endpoint": "/auth/register/",
+        "method": "POST",
+        "message": "POST /auth/register/",
+        "response": {
+            "id": "6e08ec9a-1569-436f-9bff-3b9277c8494d",
+            "username": "neiljosteen",
+            "email": "nj@example.com",
+            "role_name": "student"
+        },
+        "user_id": "67383bf5-e566-4231-9947-1224e94225a1",
+        "session_id": null,
+        "timestamp": "2025-11-06T06:11:22.018747"
+    }
+]

@@ -2,9 +2,20 @@ import requests
 import time
 from datetime import datetime
 from functools import wraps
+from uuid import UUID
 
-LOG_SERVICE_URL = "http://127.0.0.1:8000/logs"
-SERVICE_NAME = "auth" 
+LOG_SERVICE_URL = "http://127.0.0.1:8000/logs/"
+SERVICE_NAME = "auth"
+
+
+def make_json_safe(obj):
+    if isinstance(obj, UUID):
+        return str(obj)
+    if isinstance(obj, dict):
+        return {k: make_json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [make_json_safe(v) for v in obj]
+    return obj
 
 
 def log_endpoint(func):
@@ -12,44 +23,39 @@ def log_endpoint(func):
     def wrapper(view, request, *args, **kwargs):
         start_time = time.time()
         log_data = {
-            "timestamp": datetime.utcnow(),
+            "service": SERVICE_NAME,
+            "level": "INFO",
             "endpoint": request.path,
-            "status": "pending",
-            "payload": {},
-            "response": {},
-            "user_id": None,
-            "session_id": None,
-}
+            "method": request.method,
+            "message": f"{request.method} {request.path}",
+            "response": None,
+            "user_id": str(getattr(request.user, "id", "")) if getattr(request.user, "id", None) else None,
+            "session_id": str(request.META.get("SESSION_ID", "")) if request.META.get("SESSION_ID", None) else None,
+        }
 
         try:
             if hasattr(request.data, "items"):
-                payload = {k: v for k, v in request.data.items()}
+                payload = dict(request.data.items())
             else:
                 payload = request.data or {}
         except Exception:
             payload = {}
-            
+
         log_payload = payload.copy()
-            
         for key in ["password", "access", "refresh", "token"]:
             if key in log_payload:
                 log_payload[key] = "***"
-                
         log_data["payload"] = log_payload
 
         try:
             response = func(view, request, *args, **kwargs)
-            duration = (time.time() - start_time) * 1000
 
-            try:
-                response_data = getattr(response, "data", None)
-                if response_data is None:
-                    response_data = {"status_code": response.status_code}
-                elif not isinstance(response_data, dict):
-                    response_data = dict(response_data)
-            except Exception:
-                response_data = {"status_code": getattr(response, "status_code", None)}
-                
+            response_data = getattr(response, "data", None)
+            if response_data is None:
+                response_data = {"status_code": response.status_code}
+            elif not isinstance(response_data, dict):
+                response_data = dict(response_data)
+
             if isinstance(response_data, dict):
                 log_response = response_data.copy()
                 for key in ["access", "refresh", "token"]:
@@ -57,33 +63,36 @@ def log_endpoint(func):
                         log_response[key] = "***"
                 log_data["response"] = log_response
 
+            client_ip = request.META.get("REMOTE_ADDR", "unknown")
+            status_code = getattr(response, "status_code", 0)
 
-            log_data.update({
-                "timestamp": datetime.utcnow().isoformat(),
-                "status": "success" if response.status_code < 400 else "error",
-                "level": "info" if response.status_code < 400 else "warning",
-                "response": log_data["response"],
-                "duration_ms": round(duration, 2),
-                "user_id": str(request.user.id) if hasattr(request, "user") and request.user.is_authenticated else None,
-                "session_id": getattr(request.session, "session_key", None)
-            })
+            if status_code < 400:
+                log_data["level"] = "info"
+            elif status_code < 500:
+                log_data["level"] = "warning"
+            else:
+                log_data["level"] = "error"
 
-            send_log_async(log_data)
+            log_data["meta"] = f'{client_ip} - "{request.method} {request.path}" {status_code}'
+            log_data["duration_ms"] = round((time.time() - start_time) * 1000, 2)
+            log_data["timestamp"] = datetime.utcnow().isoformat()
+
+            if not log_data["session_id"]:
+                log_data.pop("session_id", None)
+
+            send_log_async(make_json_safe(log_data))  # ✅ безопасно
             return response
 
         except Exception as e:
-            duration = (time.time() - start_time) * 1000
             log_data.update({
-                "timestamp": datetime.utcnow().isoformat(),
-                "status": "error",
+                "service": SERVICE_NAME,
                 "level": "error",
-                "duration_ms": round(duration, 2),
-                "response": {"error_message": str(e)},
-                "user_id": str(request.user.id) if hasattr(request, "user") and request.user.is_authenticated else None,
-                "session_id": getattr(request.session, "session_key", None)
+                "message": f"Exception in {request.method} {request.path}: {str(e)}",
+                "timestamp": datetime.utcnow().isoformat(),
             })
-            send_log_async(log_data)
-            raise e  
+            send_log_async(make_json_safe(log_data))
+            raise e
+
     return wrapper
 
 

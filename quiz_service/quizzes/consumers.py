@@ -88,8 +88,7 @@ class SessionConsumer(AsyncJsonWebsocketConsumer):
     
     async def handle_next_question(self, data):
         session = self.session
-
-        # Получаем все вопросы квиза
+        
         all_questions = await sync_to_async(lambda: list(session.quiz.questions.all().order_by("id")))()
 
         if not all_questions:
@@ -99,7 +98,6 @@ class SessionConsumer(AsyncJsonWebsocketConsumer):
             })
             return
 
-        # Определяем текущий вопрос
         current_question = await sync_to_async(lambda: session.current_question)()
 
         if current_question:
@@ -107,14 +105,11 @@ class SessionConsumer(AsyncJsonWebsocketConsumer):
                 current_index = next(i for i, q in enumerate(all_questions) if q.id == current_question.id)
                 next_index = current_index + 1
             except StopIteration:
-                # Текущий вопрос не найден в списке — начинаем с первого
                 next_index = 0
         else:
-            # Если вопроса нет — начинаем с первого
             next_index = 0
 
         if next_index >= len(all_questions):
-            # Все вопросы закончились — завершаем сессию
             session.status = "finished"
             await sync_to_async(session.save)()
             await self.send_json({
@@ -123,19 +118,15 @@ class SessionConsumer(AsyncJsonWebsocketConsumer):
             })
             return
 
-        # Берём следующий вопрос по индексу
         next_question = all_questions[next_index]
 
-        # Сохраняем текущий вопрос и статус сессии
         session.current_question = next_question
         session.status = "in_progress"
         await sync_to_async(session.save)()
 
-        # Получаем варианты ответа
         options = await sync_to_async(lambda: list(next_question.options.all()))()
         options_payload = [{"id": str(opt.id), "text": opt.text} for opt in options]
 
-        # Отправляем всем участникам
         await self.channel_layer.group_send(
             self.room_group_name,
             {

@@ -178,9 +178,7 @@ class TestSessionConsumer(TransactionTestCase):
         except asyncio.CancelledError:
             pass
 
-        # тест для одного студента / сессии
     async def test_session_status_after_next_question(self):
-        # создаем второй вопрос
         question2 = await database_sync_to_async(Question.objects.create)(
             quiz=self.quiz,
             text="Second question?",
@@ -197,39 +195,32 @@ class TestSessionConsumer(TransactionTestCase):
         )
         comm.scope["url_route"] = {"kwargs": {"invite_code": self.session.invite_code}}
         await comm.connect()
-        await comm.receive_json_from()  # приветственное сообщение
+        await comm.receive_json_from()
 
-        # учитель отправляет следующий вопрос
         await comm.send_json_to({
             "action": "next_question",
             "question_id": str(question2.id)
         })
 
-        # получаем broadcast сессии  # ожидаем broadcast сессии и фильтруем нужное сообщение
         while True:
             response = await comm.receive_json_from()
             if response.get("action") == "next_question":
                 break
-            # игнорируем другие сообщения, например приветствие
             await asyncio.sleep(0.01)
 
 
-        # проверяем формат сообщения
         self.assertEqual(response["action"], "next_question")
         self.assertEqual(response["question_id"], str(question2.id))
         self.assertEqual(response["text"], question2.text)
         self.assertIn("options", response)
         self.assertTrue(len(response["options"]) > 0)
 
-        # проверяем обновление сессии через sync
         session = await database_sync_to_async(Session.objects.get)(id=self.session.id)
-        self.assertEqual(session.current_question_id, question2.id)  # <-- ключевое изменение
+        self.assertEqual(session.current_question_id, question2.id)
         self.assertEqual(session.status, "in_progress")
 
         await comm.disconnect()
 
-
-    # тест для нескольких студентов (broadcast)
     async def test_multiple_students_receive_next_question(self):
         question2 = await database_sync_to_async(Question.objects.create)(
             quiz=self.quiz,
@@ -254,10 +245,9 @@ class TestSessionConsumer(TransactionTestCase):
 
         await comm1.connect()
         await comm2.connect()
-        await comm1.receive_json_from()  # welcome
+        await comm1.receive_json_from()
         await comm2.receive_json_from()
 
-        # учитель отправляет следующий вопрос
         teacher_comm = WebsocketCommunicator(
             SessionConsumer.as_asgi(),
             path,
@@ -265,14 +255,13 @@ class TestSessionConsumer(TransactionTestCase):
         )
         teacher_comm.scope["url_route"] = {"kwargs": {"invite_code": self.session.invite_code}}
         await teacher_comm.connect()
-        await teacher_comm.receive_json_from()  # welcome
+        await teacher_comm.receive_json_from()
 
         await teacher_comm.send_json_to({
             "action": "next_question",
             "question_id": str(question2.id)
         })
 
-        # студенты получают broadcast
         await asyncio.sleep(0.05)
 
         async def get_next_question_response(comm):

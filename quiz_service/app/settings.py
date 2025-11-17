@@ -51,9 +51,17 @@ INSTALLED_APPS = [
     'rest_framework',
     "drf_spectacular",
     "drf_spectacular_sidecar",
+    "channels",
     'quizzes'
 ]
 
+ASGI_APPLICATION = "quiz_service.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",

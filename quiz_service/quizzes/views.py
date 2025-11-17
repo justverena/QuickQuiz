@@ -85,6 +85,19 @@ class StudentSessionViewSet(viewsets.ModelViewSet):
         elif getattr(user, 'role', None) == 'student':
             return Session.objects.none()
         return Session.objects.none()
+    
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='invite_code',
+                description='Invite code to join a quiz session',
+                required=True,
+                type=str,
+                location=OpenApiParameter.QUERY,
+            )
+        ],
+        responses={200: SessionSerializer}
+    )
 
     @action(detail=False, methods=['get'], url_path='get-by-invite', url_name='get-by-invite')
     def get_by_invite_code(self, request):

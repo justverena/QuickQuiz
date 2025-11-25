@@ -18,5 +18,5 @@ urlpatterns = [
     path('api/teacher/', include(teacher_router.urls)),
 
     path('api/student/', include(student_router.urls)),
-
+    
 ]

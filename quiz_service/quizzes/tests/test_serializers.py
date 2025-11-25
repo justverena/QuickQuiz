@@ -33,12 +33,18 @@ class QuestionSerializerTest(TestCase):
             teacher_id=uuid.uuid4()
         )
         self.question_data = {
-            "quiz": str(self.quiz.id),
+            "quiz_id": str(self.quiz.id),
+            "index": 0,
             "text": "What is the boiling point of water?",
-            "question_type": "text"
+            "correct_option_index": 0,
+            "timer": 30,
+            "type": "text",
+            "points": 1,
         }
 
     def test_valid_question(self):
         serializer = QuestionSerializer(data=self.question_data)
         self.assertTrue(serializer.is_valid(), serializer.errors)
-        serializer.save()
+        question = serializer.save()
+        self.assertEqual(question.quiz_id, self.quiz)
+        self.assertEqual(question.text, self.question_data["text"])

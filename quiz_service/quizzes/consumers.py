@@ -59,19 +59,33 @@ class SessionConsumer(AsyncJsonWebsocketConsumer):
             return
 
         session = self.session
-
+        
+        # он крч в тестах консьюмерс (я его помечу) начал ругаться что типа фильтр 
+        # на несуществующее поле консьюмерс нельзя накладывать 
+        # но хз можно ли мне консъюмерс трогать, но чат жэпете
+        # предложил вот это решение:
+        
+        correct_index = question.correct_option_index
         correct_ids = list(map(str, await sync_to_async(list)(
-            question.options.filter(is_correct=True).values_list("id", flat=True)
+            question.options.filter(index=correct_index).values_list("id", flat=True)
         )))
+        
+        
+        # старый варик сохранила на всякий случай:
+        # correct_ids = list(map(str, await sync_to_async(list)(
+        #     question.options.filter(is_correct=True).values_list("id", flat=True)
+        # )))
         is_correct = set(selected_options) == set(correct_ids)
-
+        
+        # а еще внизу закоментила респонс тайм потому 
+        # что в модели его больше нет:
         await sync_to_async(Answer.objects.create)(
             session=session,
             student_id=student_id,
             question=question,
             selected_options=selected_options,
             is_correct=is_correct,
-            response_time=data.get("response_time", 0)
+            # response_time=data.get("response_time", 0)
         )
 
         await self.channel_layer.group_send(
@@ -89,7 +103,7 @@ class SessionConsumer(AsyncJsonWebsocketConsumer):
     async def handle_next_question(self, data):
         session = self.session
         
-        all_questions = await sync_to_async(lambda: list(session.quiz.questions.all().order_by("id")))()
+        all_questions = await sync_to_async(lambda: list(session.quiz_id.questions.all().order_by("index")))()
 
         if not all_questions:
             await self.send_json({
@@ -98,7 +112,7 @@ class SessionConsumer(AsyncJsonWebsocketConsumer):
             })
             return
 
-        current_question = await sync_to_async(lambda: session.current_question)()
+        current_question = await sync_to_async(lambda: session.current_question_index)()
 
         if current_question:
             try:

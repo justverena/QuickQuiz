@@ -35,22 +35,31 @@ class QuestionModelTest(TestCase):
     
     def test_create_question(self):
         question = Question.objects.create(
-            quiz=self.quiz,
+            quiz_id=self.quiz,
+            index=0,
             text="What is h2o?",
+            correct_option_index=0,
+            timer=30,
             type="single",
             points=2
         )
-        self.assertEqual(question.quiz, self.quiz)
+        self.assertEqual(question.quiz_id, self.quiz)
         self.assertEqual(question.type, "single")
 
 class OptionModelTest(TestCase):
     def setUp(self):
         self.quiz = Quiz.objects.create(title="Math", teacher_id=uuid.uuid4())
-        self.question = self.quiz.questions.create(text="2+2=?", type="single")
+        self.question = self.quiz.questions.create(
+            text="2+2=?", 
+            type="single",
+            timer=30,
+            index=0,
+            correct_option_index=0)
 
     def test_create_option(self):
-        option = Option.objects.create(question=self.question, text="4", is_correct = True)
-        self.assertTrue(option.is_correct)
+        option = Option.objects.create(question=self.question, text="4", index=0)
+        is_correct = (option.index == self.question.correct_option_index)
+        self.assertTrue(is_correct)
 
 class SessionModelTest(TestCase):
     def setUp(self):
@@ -58,9 +67,10 @@ class SessionModelTest(TestCase):
 
     def test_create_session(self):
         session = Session.objects.create(
-            quiz=self.quiz,
+            quiz_id=self.quiz,
+            teacher_id=self.quiz.teacher_id,
             invite_code="ABC123",
             duration=10
         )
-        self.assertEqual(session.quiz, self.quiz)
-        self.assertTrue(session.is_active)
+        self.assertEqual(session.quiz_id, self.quiz)
+        self.assertEqual(session.status, 'waiting')

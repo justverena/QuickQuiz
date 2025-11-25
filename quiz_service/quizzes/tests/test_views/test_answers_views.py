@@ -1,17 +1,27 @@
 import uuid
 import jwt
 from django.urls import reverse
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from app import settings
 from quizzes.models import Quiz, Session, Question, Option, Answer
-
+from django.contrib.auth import get_user_model
 
 class StudentViewTest(APITestCase):
 
     def setUp(self):
-        self.student_id = uuid.uuid4()
+        
+        
+        self.client = APIClient()
+        
         self.teacher_id = uuid.uuid4()
+    # UUID студента для JWT
+        self.student_id = uuid.uuid4()
+        
+        self.user = get_user_model().objects.create_user(
+            username="test_student",
+            password="pass123"
+        )
 
         self.quiz = Quiz.objects.create(
             title="Math Quiz",
@@ -20,20 +30,23 @@ class StudentViewTest(APITestCase):
         )
 
         self.session = Session.objects.create(
-            quiz=self.quiz,
-            invite_code="ABC123"
+            quiz_id=self.quiz,
+            invite_code="ABC123",
+            teacher_id=self.teacher_id
         )
 
         self.question = Question.objects.create(
-            quiz=self.quiz,
+            quiz_id=self.quiz,
             text="2 + 2 = ?",
-            type="single"
+            type="single",
+            correct_option_index=0,
+            timer=30
         )
 
         self.option = Option.objects.create(
             question=self.question,
             text="4",
-            is_correct=True
+            index=0
         )
 
         self.answer_data = {

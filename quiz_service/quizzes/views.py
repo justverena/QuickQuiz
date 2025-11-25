@@ -6,6 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.decorators import action
+import random
+import string
+from django.utils import timezone
+
 
 class QuizViewSet(viewsets.ModelViewSet):
     queryset = Quiz.objects.all().order_by('-created_at')
@@ -51,6 +55,56 @@ class SessionViewSet(viewsets.ModelViewSet):
 
         return [p() for p in permission_classes]
     
+    def generate_invite_code(self, length=6):
+        while True:
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+            if not Session.objects.filter(invite_code=code).exists():
+                return code
+            
+    def create(self, request, *args, **kwargs):
+        quiz_id = request.data.get("quiz_id")
+        duration = request.data.get("duration")
+
+        if not quiz_id:
+            return Response({"detail": "quiz_id is required"}, status=400)
+
+        try:
+            quiz = Quiz.objects.get(id=quiz_id)
+        except Quiz.DoesNotExist:
+            return Response({"detail": "Quiz not found"}, status=404)
+
+        session = Session.objects.create(
+            quiz_id=quiz.id,
+            teacher_id=request.user.id,
+            invite_code=self.generate_invite_code(),
+            status="waiting",
+            duration=duration,
+        )
+
+        return Response({
+            "session_id": str(session.id),
+            "invite_code": session.invite_code,
+            "status": session.status,
+        }, status=201)
+
+    @action(detail=True, methods=['post'], url_path='start')
+    def start_session(self, request, pk=None):
+        try:
+            session = Session.objects.get(id=pk)
+        except Session.DoesNotExist:
+            return Response({"detail": "Session not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if session.teacher_id != request.user.id:
+            return Response({"detail": "only host can start session"}, status=status.HTTP_403_FORBIDDEN)
+        
+        session.status = 'in_progress'
+        session.start_time = timezone.now()
+        session.current_question_index = 0
+        session.save()
+        
+        return Response({"status": session.status})
+        
+    
 class StudentSessionViewSet(viewsets.ModelViewSet):
     queryset = Session.objects.all()
     serializer_class = SessionSerializer
@@ -81,7 +135,7 @@ class StudentSessionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if getattr(user, 'role', None) == 'teacher':
-            return Session.objects.filter(quiz__teacher_id=user.id)
+            return Session.objects.filter(quiz_id__teacher_id=user.id)
         elif getattr(user, 'role', None) == 'student':
             return Session.objects.none()
         return Session.objects.none()

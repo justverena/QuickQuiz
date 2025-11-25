@@ -28,10 +28,6 @@ class Question(models.Model):
     quiz_id = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
     index = models.IntegerField(default=0)
     text = models.TextField()
-    
-    #денормализация опшена (закоментить модель опшенов)
-    #options = JSONField(default=list)
-    
     correct_option_index = models.IntegerField(default=0)
     timer = models.IntegerField(help_text="Seconds to answer")
     type = models.CharField(max_length=50, choices=QUESTION_TYPES, default='single')
@@ -60,7 +56,6 @@ class Session(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     quiz_id = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='sessions')
     teacher_id = models.UUIDField(null=False)
-    # teacher_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sessions")
     invite_code = models.CharField(max_length=6, unique=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting')
     current_question_index = models.IntegerField(default=0)

@@ -13,20 +13,17 @@ class OptionViewSetTest(APITestCase):
         self.teacher_id = uuid.uuid4()
         self.student_id = uuid.uuid4()
 
-        # Тестовый пользователь
         self.user = get_user_model().objects.create_user(
             username="test_teacher",
             password="pass123"
         )
 
-        # Квиз
         self.quiz = Quiz.objects.create(
             title="Math Quiz",
             description="Test",
             teacher_id=self.teacher_id
         )
 
-        # Вопрос
         self.question = Question.objects.create(
             quiz_id=self.quiz,
             text="2 + 2 = ?",
@@ -36,11 +33,10 @@ class OptionViewSetTest(APITestCase):
             points=1
         )
 
-        # Данные для создания опции
         self.option_data = {
             "question": str(self.question.id),
             "text": "4",
-            "index": 0  # index нужен вместо is_correct
+            "index": 0  
         }
 
         self.url = reverse("option-list")

@@ -73,7 +73,6 @@ class AnswerSerializer(serializers.ModelSerializer):
                     {"selected_options": "Must contain exactly one option index for single-choice question."}
                 )
 
-        # Проверяем — указанные индексы действительно существуют
         valid_uuids = set(
             question.options.values_list('id', flat=True)
         )
@@ -84,28 +83,16 @@ class AnswerSerializer(serializers.ModelSerializer):
             })
 
         return data
-        
-        valid_indices = set(
-            question.options.values_list('index', flat=True)
-        )
-        invalid = [i for i in selected if i not in valid_indices]
-        if invalid:
-            raise serializers.ValidationError(
-                {"selected_options": f"Invalid option indices: {invalid}"}
-            )
-
-        return data
 
     def create(self, validated_data):
         answer = super().create(validated_data)
 
-        # Проверка правильности ответа через correct_option_index
         correct_index = answer.question.correct_option_index
         correct_option_id = answer.question.options.get(index=correct_index).id
 
         if answer.question.type == 'single':
             answer.is_correct = (answer.selected_options == [correct_option_id])
-        else:  # multiple
+        else:
             answer.is_correct = (correct_option_id in answer.selected_options)
 
         answer.save(update_fields=['is_correct'])

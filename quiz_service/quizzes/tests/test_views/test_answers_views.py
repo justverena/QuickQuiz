@@ -15,7 +15,6 @@ class StudentViewTest(APITestCase):
         self.client = APIClient()
         
         self.teacher_id = uuid.uuid4()
-    # UUID студента для JWT
         self.student_id = uuid.uuid4()
         
         self.user = get_user_model().objects.create_user(

@@ -94,9 +94,9 @@ class SessionViewSet(viewsets.ModelViewSet):
         except Session.DoesNotExist:
             return Response({"detail": "Session not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        if session.teacher_id != request.user.id:
+        if str(session.teacher_id) != str(request.user.id):
             return Response({"detail": "only host can start session"}, status=status.HTTP_403_FORBIDDEN)
-        
+
         session.status = 'in_progress'
         session.start_time = timezone.now()
         session.current_question_index = 0

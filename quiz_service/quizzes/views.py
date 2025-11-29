@@ -62,7 +62,7 @@ class SessionViewSet(viewsets.ModelViewSet):
                 return code
             
     def create(self, request, *args, **kwargs):
-        quiz_id = request.data.get("quiz_id")
+        quiz_id = request.data.get("quiz")
         duration = request.data.get("duration")
 
         if not quiz_id:
@@ -74,7 +74,7 @@ class SessionViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Quiz not found"}, status=404)
 
         session = Session.objects.create(
-            quiz_id=quiz.id,
+            quiz_id=quiz_id,
             teacher_id=request.user.id,
             invite_code=self.generate_invite_code(),
             status="waiting",

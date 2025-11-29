@@ -54,7 +54,7 @@ class Session(models.Model):
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    quiz_id = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='sessions')
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='sessions')
     teacher_id = models.UUIDField(null=False)
     invite_code = models.CharField(max_length=6, unique=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting')

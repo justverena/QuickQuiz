@@ -35,7 +35,7 @@ class SessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Session
         fields = [
-            'id', 'quiz_id', 'teacher_id',
+            'id', 'quiz', 'teacher_id',
             'invite_code', 'status',
             'current_question_index', 'start_time',
             'end_time', 'duration',

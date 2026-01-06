@@ -12,14 +12,12 @@ class QuestionViewSetTest(APITestCase):
         self.teacher_id = uuid.uuid4()
         self.student_id = uuid.uuid4()
 
-        # Тестовый квиз
         self.quiz = Quiz.objects.create(
             title="Science Quiz",
             description="Test your science knowledge",
             teacher_id=self.teacher_id
         )
 
-        # Данные для создания вопроса
         self.question_data = {
             "quiz_id": str(self.quiz.id),
             "text": "What is the boiling point of water?",

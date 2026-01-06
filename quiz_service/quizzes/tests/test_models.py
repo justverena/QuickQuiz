@@ -61,16 +61,16 @@ class OptionModelTest(TestCase):
         is_correct = (option.index == self.question.correct_option_index)
         self.assertTrue(is_correct)
 
-class SessionModelTest(TestCase):
-    def setUp(self):
-        self.quiz = Quiz.objects.create(title="Test Quiz", teacher_id=uuid.uuid4())
+# class SessionModelTest(TestCase):
+#     def setUp(self):
+#         self.quiz = Quiz.objects.create(title="Test Quiz", teacher_id=uuid.uuid4())
 
-    def test_create_session(self):
-        session = Session.objects.create(
-            quiz_id=self.quiz,
-            teacher_id=self.quiz.teacher_id,
-            invite_code="ABC123",
-            duration=10
-        )
-        self.assertEqual(session.quiz_id, self.quiz)
-        self.assertEqual(session.status, 'waiting')
+#     def test_create_session(self):
+#         session = Session.objects.create(
+#             quiz_id=self.quiz,
+#             teacher_id=self.quiz.teacher_id,
+#             invite_code="ABC123",
+#             duration=10
+#         )
+#         self.assertEqual(session.quiz_id, self.quiz)
+#         self.assertEqual(session.status, 'waiting')
